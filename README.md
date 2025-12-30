@@ -12,8 +12,10 @@ This repository uses a structured approach for LLM-assisted development with loc
 
 ### Key Concepts
 
-- **Local Development OS**: `.claude/` directory manages all specs and logs locally
-- **Not committed**: Your `.claude/` folder stays private (see `.gitignore`)
+- **Development OS**: `.claude/` directory manages all specs and logs
+- **Committed**: Your `.claude/` folder is committed for traceability
+- **Branch per task**: Every task gets its own `claude/<slug>-<id>` branch
+- **PR always**: Every task gets a PR, no matter how small
 - **Team info in PRs**: Share results and impact with team via pull requests
 - **Minimal GitHub Issues**: Use only for coordination, not detailed logs
 
@@ -21,11 +23,13 @@ This repository uses a structured approach for LLM-assisted development with loc
 
 ```
 myinput/
-├── .claude/                    # Local only (in .gitignore)
+├── .claude/                    # Committed to repository
 │   ├── issues/YYYY-MM/        # Task descriptions
 │   ├── specs/YYYY-MM/         # Specifications (planned + as-built)
 │   ├── log/YYYY-MM/           # Work logs and investigations
+│   ├── rules/                 # Detailed rules (auto-loaded)
 │   └── templates/             # Templates for consistency
+├── docs/                       # Reference documentation
 ├── CLAUDE.md                   # Development rules for LLMs
 └── README.md                   # This file
 ```
@@ -33,17 +37,20 @@ myinput/
 ## Workflow Summary
 
 ### Gate A: Starting a Task
-1. LLM creates 3 files with same `<slug>-<id>`:
+1. LLM creates branch `claude/<slug>-<id>`
+2. LLM creates 3 files with same `<slug>-<id>`:
    - `.claude/issues/YYYY-MM/<slug>-<id>.md`
    - `.claude/specs/YYYY-MM/<slug>-<id>.md` (Status: draft)
    - `.claude/log/YYYY-MM/<slug>-<id>.md`
-2. Review Goal and Acceptance Criteria
-3. Begin implementation
+3. Commit and push `.claude/` files
+4. Review Goal and Acceptance Criteria
+5. Begin implementation
 
 ### Gate B: Before PR
 1. LLM updates spec to reflect reality (as-built)
 2. Document differences between planned and as-built
-3. Create PR based on updated spec
+3. Commit and push spec updates
+4. Create PR based on updated spec (required for every task)
 
 ## Why This Approach?
 
@@ -54,14 +61,15 @@ myinput/
 - **Lost decisions**: Design notes captured without clutter
 
 ### What Makes It Work
-- **Local-first**: Your detailed work stays private
+- **Traceable**: All work committed to git for complete history
+- **Branch-based**: Every task gets its own branch and PR
 - **Minimal overhead**: Two simple gates, reusable templates
 - **LLM-friendly**: Clear rules for AI assistants to follow
 - **Living docs**: Specs evolve with implementation
 
 ## For Team Members
 
-You won't see `.claude/` folders in commits - they're local only. All relevant information will be in:
+The `.claude/` folder contains the complete development history. For quick reference, check:
 - **Pull Requests**: Results, impact, verification, reasoning
 - **GitHub Issues**: High-level coordination and priorities
 - **Code & Tests**: The source of truth
@@ -81,4 +89,4 @@ Check `.claude/templates/` for:
 
 ---
 
-**Philosophy**: Detailed specs and logs are for you and your LLM. Clean, useful information is for your team.
+**Philosophy**: Detailed specs and logs are committed for traceability. Clean, actionable information is surfaced in PRs.

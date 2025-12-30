@@ -6,8 +6,9 @@ This defines the development OS for **You (Developer) × LLM collaboration**.
 
 **Core Principles**:
 1. Team operations (GitHub) stay minimal and noise-free
-2. Specs and work logs managed locally in `.claude/`
+2. Specs and work logs managed in `.claude/` directory (committed to git)
 3. LLM context compression accepted; compensate with external memory
+4. Every task gets its own branch and PR, no matter how small
 
 ---
 
@@ -15,7 +16,7 @@ This defines the development OS for **You (Developer) × LLM collaboration**.
 
 ### File Organization
 ```
-.claude/                                    # Local only (gitignored)
+.claude/                                    # Committed to repository
 ├── issues/YYYY-MM/<slug>-<id>.md         # Task descriptions
 ├── specs/YYYY-MM/<slug>-<id>.md          # Specifications (planned + as-built)
 ├── log/YYYY-MM/<slug>-<id>.md            # Work logs
@@ -31,14 +32,17 @@ This defines the development OS for **You (Developer) × LLM collaboration**.
 ### Two-Gate Workflow
 
 **Gate A (Task Start)**:
-1. LLM creates three files with unique `slug-id`
-2. Review Goal and Acceptance Criteria
-3. Begin development
+1. LLM creates branch `claude/<slug>-<id>`
+2. LLM creates three `.claude/` files with unique `slug-id`
+3. Commit and push `.claude/` files
+4. Review Goal and Acceptance Criteria
+5. Begin development
 
 **Gate B (Before PR)**:
 1. LLM updates spec's **As-Built** section
 2. Document **Differences** from plan
-3. Create PR from updated spec
+3. Commit and push spec updates
+4. Create PR from updated spec
 
 ---
 
@@ -47,6 +51,7 @@ This defines the development OS for **You (Developer) × LLM collaboration**.
 This CLAUDE.md provides the overview. Detailed rules are in modular files:
 
 ### Core Rules (Auto-Loaded)
+@./.claude/rules/branching.md
 @./.claude/rules/workflow.md
 @./.claude/rules/naming.md
 @./.claude/rules/specs.md
@@ -74,16 +79,20 @@ Available in `.claude/templates/`:
 
 ### GitHub Integration
 - **Issues**: High-level coordination only
-- **PRs**: Results, Impact, Verification, Why (if complex)
-- **`.claude/`**: Detailed logs stay local
+- **PRs**: Every task gets a PR, no matter how small
+- **Branches**: Always `claude/<slug>-<id>` format
+- **`.claude/`**: Committed to repository for traceability
 
 ### For LLMs
 You MUST:
+- Create branch `claude/<slug>-<id>` BEFORE creating files
 - Create files in `.claude/` with proper `slug-id`
+- Commit and push `.claude/` files immediately
 - Use `YYYY-MM/` directories
 - Update As-Built before every PR
-- Keep same `slug-id` across all three files
+- Keep same `slug-id` across branch and all three files
 - Follow naming rules: `[a-z0-9-]` for slug, `[0-9a-f]{6,8}` for id
+- Create PR for EVERY task, even small ones
 
 ---
 

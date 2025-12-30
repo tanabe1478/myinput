@@ -1,8 +1,3 @@
-# Claude Code local development files
-# These files contain personal development logs, specs, and work-in-progress
-# that should not be shared with the team
-.claude/
-
 # Common ignore patterns
 node_modules/
 dist/
