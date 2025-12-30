@@ -6,3 +6,25 @@ build/
 .env
 .env.local
 .DS_Store
+
+# pnpm
+pnpm-lock.yaml
+.pnpm-store/
+
+# Wrangler
+.wrangler/
+.dev.vars
+
+# Vite
+.vite/
+
+# Test coverage
+coverage/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Generated files
+frontend/src/generated/

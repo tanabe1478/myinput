@@ -1,3 +1,119 @@
+# RSS Reader MVP
+
+A modern RSS reader built with GraphQL, React, and Cloudflare Workers.
+
+## Tech Stack
+
+- **Frontend**: React 19 + Vite + TypeScript + Tailwind CSS v4
+- **Backend**: Cloudflare Workers + Hono + GraphQL Yoga + Pothos
+- **Database**: Cloudflare D1 (SQLite at edge)
+- **Testing**: Vitest (unit/integration) + Playwright (E2E)
+- **Package Manager**: pnpm 10.x
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 20+
+- pnpm 10.x
+- Cloudflare account (for deployment)
+
+### Installation
+
+```bash
+# Install dependencies for all packages
+pnpm install
+```
+
+### Development
+
+```bash
+# Start both frontend and backend servers
+pnpm dev
+```
+
+- Frontend: http://localhost:5173
+- Backend GraphQL: http://localhost:8787/graphql
+
+### Testing
+
+```bash
+# Run all unit tests
+pnpm test
+
+# Run tests for specific package
+pnpm --filter frontend test
+pnpm --filter backend test
+```
+
+**Test Coverage**: 10 tests passing (4 frontend + 6 backend)
+
+## Project Structure
+
+```
+├── frontend/          # React frontend (Vite)
+│   ├── src/
+│   │   ├── __tests__/    # Component tests
+│   │   ├── App.tsx       # Root component
+│   │   └── main.tsx      # Entry point
+│   └── package.json
+├── backend/           # Cloudflare Workers backend
+│   ├── src/
+│   │   ├── __tests__/    # Unit tests
+│   │   ├── schema/       # GraphQL schema (Pothos)
+│   │   └── index.ts      # Hono + Yoga setup
+│   ├── wrangler.toml     # Workers config
+│   └── package.json
+├── e2e/               # Playwright E2E tests
+│   ├── tests/
+│   └── package.json
+└── .claude/           # Development specs and logs
+```
+
+## Available Scripts
+
+### Root Level
+- `pnpm dev` - Start frontend and backend
+- `pnpm test` - Run all tests
+- `pnpm build` - Build all packages
+
+### Frontend
+- `pnpm dev` - Start Vite dev server (port 5173)
+- `pnpm test` - Run component tests
+- `pnpm codegen` - Generate GraphQL types
+
+### Backend
+- `pnpm dev` - Start Wrangler dev server (port 8787)
+- `pnpm test` - Run unit tests
+- `pnpm deploy` - Deploy to Cloudflare Workers
+
+## GraphQL API
+
+Health check example:
+
+```graphql
+query {
+  health
+}
+```
+
+GraphQL Playground: http://localhost:8787/graphql
+
+## Deployment
+
+### Frontend (Cloudflare Pages)
+```bash
+cd frontend && pnpm build
+# Deploy dist/ to Cloudflare Pages
+```
+
+### Backend (Cloudflare Workers)
+```bash
+cd backend && pnpm deploy
+```
+
+---
+
 # Development with Claude Code
 
 This repository uses a structured approach for LLM-assisted development with local specification and log management.

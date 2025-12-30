@@ -45,10 +45,16 @@ A web application built with React SPA frontend and backend API, hosted on Cloud
   - Customizable components copied into project
 - **State Management**: TanStack Query (React Query) for server state
 - **Routing**: React Router v6
+- **GraphQL Client**:
+  - `graphql-request` (lightweight) or `urql` (advanced features)
+  - `@graphql-codegen/cli` for automatic TypeScript type generation
+  - `@graphql-codegen/client-preset` for typed hooks
 
 #### Backend
 - **Runtime**: Cloudflare Workers (V8 edge runtime)
 - **Framework**: Hono (lightweight, fast, designed for edge)
+- **GraphQL Server**: graphql-yoga (Cloudflare Workers compatible, lightweight)
+- **Schema Builder**: Pothos GraphQL (TypeScript-first, type-safe schema definition)
 - **Database**: Cloudflare D1 (SQLite)
   - ORM: Drizzle ORM (edge-compatible)
 - **Authentication**: Clerk or Auth.js (Cloudflare Workers compatible)
@@ -412,43 +418,170 @@ function matchesTheme(article: Article, theme: Theme): boolean {
 - **XSS Prevention**: Escape all user-generated content in UI
 - **CSRF**: Not needed (API uses JWT, not cookies)
 
-### API Endpoints (REST)
+### GraphQL API Schema
 
-#### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `POST /api/auth/logout` - Logout user
-- `GET /api/auth/me` - Get current user
+Single endpoint: `POST /graphql`
 
-#### Feeds
-- `GET /api/feeds` - List user's feeds
-- `POST /api/feeds` - Add new feed
-- `GET /api/feeds/:id` - Get feed details
-- `DELETE /api/feeds/:id` - Delete feed
-- `POST /api/feeds/:id/refresh` - Manually refresh feed
+#### Type Definitions
 
-#### Today
-- `GET /api/today` - Get today's queue (auto-generates if not exists)
-- `GET /api/today/:date` - Get today queue for specific date
+```graphql
+type User {
+  id: ID!
+  email: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
 
-#### Items
-- `POST /api/items/:id/read` - Mark as read (Open action)
-- `POST /api/items/:id/keep` - Mark as kept (Keep action)
-- `POST /api/items/:id/skip` - Mark as skipped (Skip action)
+type Feed {
+  id: ID!
+  title: String!
+  url: String!
+  lastFetchedAt: DateTime
+  fetchError: String
+  createdAt: DateTime!
+}
 
-#### Saved
-- `GET /api/saved` - List kept articles
-- `POST /api/saved/:id/remove` - Remove from saved (unkeep)
+type Item {
+  id: ID!
+  feed: Feed!
+  title: String!
+  link: String!
+  publishedAt: DateTime!
+  summary: String
+  content: String
+  status: ItemStatus!
+  matchedThemes: [Theme!]
+  createdAt: DateTime!
+}
 
-#### Backlog
-- `GET /api/backlog` - List skipped articles
+enum ItemStatus {
+  UNREAD
+  READ
+  KEPT
+  SKIPPED
+}
 
-#### Themes
-- `GET /api/themes` - List user's themes
-- `POST /api/themes` - Create theme
-- `GET /api/themes/:id` - Get theme details
-- `PUT /api/themes/:id` - Update theme
-- `DELETE /api/themes/:id` - Delete theme
+enum Priority {
+  HIGH
+  MED
+  LOW
+}
+
+type Theme {
+  id: ID!
+  name: String!
+  priority: Priority!
+  keywords: [String!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type TodayQueue {
+  date: String!  # YYYY-MM-DD
+  high: [Item!]!
+  med: [Item!]!
+  low: [Item!]!
+  other: [Item!]!
+  totalCount: Int!
+  createdAt: DateTime!
+}
+
+scalar DateTime
+```
+
+#### Queries
+
+```graphql
+type Query {
+  # Authentication
+  me: User
+
+  # Feeds
+  feeds: [Feed!]!
+  feed(id: ID!): Feed
+
+  # Today
+  today(date: String): TodayQueue!  # Auto-generates if not exists
+
+  # Items
+  savedItems: [Item!]!
+  backlogItems: [Item!]!
+
+  # Themes
+  themes: [Theme!]!
+  theme(id: ID!): Theme
+}
+```
+
+#### Mutations
+
+```graphql
+type Mutation {
+  # Authentication (handled by Clerk/Auth.js, minimal GraphQL mutations)
+  # register/login/logout handled via auth provider
+
+  # Feeds
+  addFeed(url: String!): Feed!
+  deleteFeed(id: ID!): Boolean!
+  refreshFeed(id: ID!): Feed!
+
+  # Items
+  markItemRead(id: ID!): Item!
+  markItemKept(id: ID!): Item!
+  markItemSkipped(id: ID!): Item!
+  removeFromSaved(id: ID!): Item!
+
+  # Themes
+  createTheme(input: CreateThemeInput!): Theme!
+  updateTheme(id: ID!, input: UpdateThemeInput!): Theme!
+  deleteTheme(id: ID!): Boolean!
+}
+
+input CreateThemeInput {
+  name: String!
+  priority: Priority!
+  keywords: [String!]!
+}
+
+input UpdateThemeInput {
+  name: String
+  priority: Priority
+  keywords: [String!]
+}
+```
+
+#### Subscriptions (Future, not MVP)
+
+```graphql
+type Subscription {
+  # Real-time feed updates (future enhancement)
+  feedUpdated(feedId: ID!): Item!
+}
+```
+
+#### Error Handling
+
+GraphQL errors follow standard format:
+```json
+{
+  "errors": [
+    {
+      "message": "Feed not found",
+      "extensions": {
+        "code": "NOT_FOUND",
+        "feedId": "abc123"
+      }
+    }
+  ]
+}
+```
+
+Common error codes:
+- `UNAUTHENTICATED`: User not logged in
+- `FORBIDDEN`: User lacks permission
+- `NOT_FOUND`: Resource doesn't exist
+- `INVALID_INPUT`: Validation failed
+- `INTERNAL_ERROR`: Server error
 
 ### Success Metrics (MVP)
 
@@ -547,7 +680,19 @@ RSS Reader MVP の包括的な仕様書を作成しました。ユーザーへ�
 ## Differences
 **Planned vs As-Built**:
 
-なし。仕様書作成という性質上、Planned Spec と As-Built Spec の乖離は発生しませんでした。ユーザーからの追加質問（ローカル開発環境）に対応してセクションを追加しましたが、これは計画の変更ではなく自然な拡張です。
+1. **API Architecture: REST → GraphQL** (2025-12-30更新)
+   - **変更理由**: ユーザーリクエストによるボイラープレート削減のため
+   - **影響**:
+     - フロントエンド: graphql-request + @graphql-codegen で型安全な自動フック生成
+     - バックエンド: graphql-yoga + Pothos でTypeScript-firstなスキーマ定義
+     - テスト: MSW for GraphQL mocking, GraphQL-specific tests追加
+   - **トレードオフ**:
+     - ✅ 型安全性向上、ボイラープレート削減
+     - ✅ 柔軟なデータ取得（Today画面で必要なデータを1クエリ）
+     - ⚠️ 学習コスト増（チーム全員がGraphQLに慣れる必要）
+     - ⚠️ HTTPキャッシュ不可（認証必須なので元々困難）
+
+その他、ローカル開発環境の追加（Wrangler CLI）とテストポリシーの明記（TDD必須）は計画の変更ではなく自然な拡張。
 
 ## Design Notes
 
@@ -601,6 +746,13 @@ RSS Reader MVP の包括的な仕様書を作成しました。ユーザーへ�
 - +10 points is significant but not overwhelming
 - Trade-off: Older "evergreen" content may never surface in Today
 
+**GraphQL over REST**:
+- Type safety: Schema → TypeScript types auto-generated via codegen
+- Reduced boilerplate: Single query fetches all needed data (Today + feeds + themes)
+- Developer experience: GraphQL Playground for exploration, MSW for testing
+- Trade-off: Learning curve for team, no HTTP caching (acceptable as auth required)
+- Best fit: Data-heavy app with complex relationships (feeds, items, themes)
+
 **Wrangler for Local Development**:
 - True production parity: same runtime (V8), same database (SQLite)
 - No Docker needed, lightweight setup
@@ -608,36 +760,79 @@ RSS Reader MVP の包括的な仕様書を作成しました。ユーザーへ�
 - Free local development, no cloud costs
 - Trade-off: Wrangler dev slightly slower than plain Node.js (acceptable for MVP)
 
+**Test-Driven Development (TDD) Mandatory**:
+- Write tests first, then implementation (RED → GREEN → REFACTOR)
+- 80%+ coverage required for new code
+- Every PR includes tests (unit + integration + E2E for features)
+- CI/CD runs full test suite on every push
+- Tests serve as executable documentation
+
 ## Testing Strategy
 
+### Test Infrastructure
+- **Unit/Integration**: Vitest (fast, Vite-native)
+- **E2E**: Playwright (cross-browser, reliable)
+- **GraphQL Mocking**: Mock Service Worker (MSW) for frontend tests
+- **Database**: In-memory D1 for backend tests (via Wrangler)
+- **Coverage**: Target 80%+ for new code
+
 ### Unit Tests
-- Keyword matching logic (various edge cases)
-- Scoring and bucketing algorithm
-- Date/time utilities
+- **Business Logic**:
+  - Keyword matching logic (various edge cases)
+  - Scoring and bucketing algorithm
+  - Date/time utilities
+- **GraphQL Resolvers** (isolated):
+  - Theme resolver with mocked DB
+  - Item state transition resolver
+  - Today generation logic
 
 ### Integration Tests
-- RSS feed fetch and parse
-- Today generation end-to-end
-- Item state transitions (unread → read/kept/skipped)
-- Authentication flow
+- **Backend GraphQL API**:
+  - Query: `feeds`, `today`, `savedItems`, `backlogItems`, `themes`
+  - Mutation: `addFeed`, `markItemRead/Kept/Skipped`, `createTheme`, `updateTheme`
+  - Error handling: UNAUTHENTICATED, NOT_FOUND, INVALID_INPUT
+  - Authentication context injection
+- **Database Operations**:
+  - RSS feed fetch and parse
+  - Today generation end-to-end
+  - Item state transitions (unread → read/kept/skipped)
+- **Authentication flow** (via Clerk/Auth.js test mode)
 
 ### E2E Tests (Playwright)
-- User registration and login
-- Add feed → fetch articles → appear in Today
-- Create theme → articles prioritize correctly
-- Open/Keep/Skip actions → Today updates
-- Navigate between screens (Today/Saved/Backlog/Themes/Feeds)
+- **Critical User Flows**:
+  - User registration and login
+  - Add feed → fetch articles → appear in Today
+  - Create theme → articles prioritize correctly
+  - Open/Keep/Skip actions → Today updates (GraphQL mutations)
+  - Navigate between screens (Today/Saved/Backlog/Themes/Feeds)
+- **GraphQL Integration**:
+  - Frontend issues GraphQL queries/mutations
+  - Verify UI updates with real backend responses
+
+### GraphQL-Specific Tests
+- **Schema Validation**:
+  - Schema is valid GraphQL SDL
+  - All types have resolvers
+  - No orphaned types
+- **Type Safety**:
+  - Generated TypeScript types match schema
+  - Frontend queries compile with generated types
+- **Query Complexity**:
+  - N+1 query detection (use DataLoader if needed)
+  - Query depth limits (prevent abuse)
 
 ### Performance Tests
 - Today generation for 1000 articles (< 5s)
-- API endpoint response times (< 1s)
+- GraphQL query response times (< 1s for `today`, `feeds`)
 - RSS fetch for 100 feeds (< 30s)
+- GraphQL codegen execution time (< 10s)
 
 ### Manual QA
 - Mobile responsiveness (iOS Safari, Android Chrome)
 - Dark mode appearance
-- Error states (network failure, invalid feed URL)
+- Error states (network failure, invalid feed URL, GraphQL errors)
 - Empty states (no feeds, no articles, Today cleared)
+- GraphQL Playground (introspection, manual queries)
 
 ## Related
 - Issue: `.claude/issues/2025-12/rss-reader-spec-a3f7e9.md`
