@@ -2,182 +2,88 @@
 
 ## Purpose & Philosophy
 
-This document defines the development operating system for **You (Developer) × LLM collaboration**.
+This defines the development OS for **You (Developer) × LLM collaboration**.
 
-### Core Principles
-1. **Team operations (GitHub Issues/PRs) should be minimal and noise-free**
-2. **Specifications and work logs are managed locally in `.claude/`**
-3. **LLM context compression is accepted; compensate with external memory (logs/specs)**
-
----
-
-## File Organization
-
-### Storage Strategy
-- All specs (planned and as-built) and work logs default to **`.claude/` directory**
-- `.claude/` is **LOCAL ONLY** - add to `.gitignore`, never commit to repository
-- GitHub Issues are for team priority coordination only - **do not place detailed logs there**
-- Information needed by team goes in **PRs** (results, impact, verification, reasoning when necessary)
-
-### Directory Structure
-
-```
-.claude/
-├── issues/YYYY-MM/<slug>-<id>.md      # Task initiation point
-├── specs/YYYY-MM/<slug>-<id>.md       # Living specification document
-└── log/YYYY-MM/<slug>-<id>.md         # Work log (trials, investigations)
-```
-
-### Naming Convention
-
-**Format**: `<slug>-<id>.md`
-
-- **slug**: English kebab-case, `[a-z0-9-]` only
-- **id**: LLM-generated lowercase hex, 6-8 digits (regenerate on collision)
-- **Example**: `auth-403-spike-9f3a7c.md`
-
-**One Task = Three Files** (same `slug-id` across all):
-1. Task description in `issues/`
-2. Specification in `specs/`
-3. Work log in `log/`
+**Core Principles**:
+1. Team operations (GitHub) stay minimal and noise-free
+2. Specs and work logs managed locally in `.claude/`
+3. LLM context compression accepted; compensate with external memory
 
 ---
 
-## Specification Philosophy (Planned + As-Built)
+## Quick Start
 
-### What We Want
-- **Planned Spec**: Intended design before implementation
-- **As-Built Spec**: Reality after implementation ← **This is the source of truth**
-
-### Key Concepts
-- **As-Built is the primary spec and "correct" representation**
-- Planned remains as original intent; document differences explicitly
-- Design decisions (intent, constraints, pitfalls) should be **minimal annotations** (not the main content)
-
-### Spec Structure (Minimal)
-
-```markdown
-## Status
-[draft / implementing / implemented / changed]
-
-## Goal
-[What we want to achieve]
-
-## Acceptance Criteria
-[How we know it's done]
-
-## Planned Spec (Intended)
-[Original design intention]
-
-## As-Built Spec (Current Truth)
-[← Update this before PR creation]
-[Actual implementation details]
-
-## Differences
-[Planned vs As-Built differences, or "None"]
-
-## Design Notes
-[Minimal: 1-3 lines / Maximum: a few bullet points]
-[Only essential decisions, constraints, or gotchas]
+### File Organization
+```
+.claude/                                    # Local only (gitignored)
+├── issues/YYYY-MM/<slug>-<id>.md         # Task descriptions
+├── specs/YYYY-MM/<slug>-<id>.md          # Specifications (planned + as-built)
+├── log/YYYY-MM/<slug>-<id>.md            # Work logs
+├── templates/                             # Templates for consistency
+└── rules/                                 # Detailed rules (auto-loaded)
 ```
 
----
+**One Task = Three Files** with same `slug-id`:
+- `<slug>`: English kebab-case (`auth-fix`, `api-refactor`)
+- `<id>`: 6-8 digit hex (`9f3a7c`, `a1b2c3`)
+- Example: `auth-403-fix-9f3a7c.md`
 
-## Development Workflow (Low-Cost, Complete: Two Gates)
+### Two-Gate Workflow
 
-### Gate A: Task Start
-1. Ask LLM (Claude Code/Cursor) to create:
-   - `.claude/issues/YYYY-MM/<slug>-<id>.md`
-   - `.claude/specs/YYYY-MM/<slug>-<id>.md` (Status: draft)
-2. Quickly review Goal / Acceptance Criteria
+**Gate A (Task Start)**:
+1. LLM creates three files with unique `slug-id`
+2. Review Goal and Acceptance Criteria
 3. Begin development
 
-### Gate B: Before PR Creation
-1. Ask LLM to update specs based on implementation and logs:
-   - Update **As-Built Spec**
-   - Document **Differences**
-   - Update **Status**
-2. Use updated spec to **create PR description**
-   - Essential: Results, Impact, Verification (expressed in tests)
-   - When needed: Why (difficult decisions, complexity, tradeoffs)
+**Gate B (Before PR)**:
+1. LLM updates spec's **As-Built** section
+2. Document **Differences** from plan
+3. Create PR from updated spec
 
 ---
 
-## GitHub Integration (Minimize Noise)
+## Documentation Structure
 
-### GitHub Issues
-- Used for **team operation and priority coordination**
-- **Do not place detailed logs** in GitHub Issues
-- Link from `.claude/` files to GitHub Issues if needed
-- **Do not link back** from GitHub to local `.claude/` files
+This CLAUDE.md provides the overview. Detailed rules are in modular files:
 
-### Pull Requests
-- **Consolidate team-relevant information in PRs**
-- Content focus:
-  - Results: What was implemented
-  - Impact: What changed for users/system
-  - Verification: How it was tested
-  - Why (optional): Reasoning when decision was difficult/complex
+### Core Rules (Auto-Loaded)
+@./.claude/rules/workflow.md
+@./.claude/rules/naming.md
+@./.claude/rules/specs.md
+@./.claude/rules/github.md
+@./.claude/rules/llm-instructions.md
+
+### Reference Documentation
+@./docs/examples.md
+
+### Templates
+Available in `.claude/templates/`:
+- `issue-template.md`: Task description structure
+- `spec-template.md`: Specification format
+- `log-template.md`: Work log format
 
 ---
 
-## LLM Instructions (The Short Constitution)
+## Key Concepts
 
-**As an LLM assistant, you MUST follow these rules:**
+### Specification Philosophy
+- **Planned Spec**: Intended design (before coding)
+- **As-Built Spec**: Reality (after coding) ← **Source of Truth**
+- Document differences explicitly when they diverge
+- Keep design notes minimal (1-3 lines per decision)
 
-### 1. Default Storage
-- All specifications and logs default to `.claude/` directory
-- Never place detailed work logs in GitHub Issues
+### GitHub Integration
+- **Issues**: High-level coordination only
+- **PRs**: Results, Impact, Verification, Why (if complex)
+- **`.claude/`**: Detailed logs stay local
 
-### 2. Task Initialization
-- At task start, create using `slug-id` format:
-  - `.claude/issues/YYYY-MM/<slug>-<id>.md`
-  - `.claude/specs/YYYY-MM/<slug>-<id>.md` (Status: draft)
-- Generate unique `id` as lowercase hex (6-8 digits)
-- If collision occurs, regenerate
-
-### 3. During Work
-- Append progress and findings to `.claude/log/YYYY-MM/<slug>-<id>.md`
+### For LLMs
+You MUST:
+- Create files in `.claude/` with proper `slug-id`
+- Use `YYYY-MM/` directories
+- Update As-Built before every PR
 - Keep same `slug-id` across all three files
-
-### 4. Before PR Creation
-- **MUST update spec to as-built** before writing PR description
-- Update: As-Built Spec, Differences, Status
-- Use updated spec as basis for PR content
-
-### 5. Naming Rules
-- **slug**: English kebab-case only (`[a-z0-9-]`)
-- **id**: Lowercase hexadecimal, 6-8 digits
-- Regenerate `id` on collision
-
-### 6. Date-Based Directories
-- Always use `YYYY-MM/` subdirectories (e.g., `2025-01/`)
-- Create directory if it doesn't exist
-
----
-
-## Examples
-
-### Good Example
-```
-Task: Fix authentication 403 error
-
-Generated files:
-- .claude/issues/2025-01/auth-403-fix-9f3a7c.md
-- .claude/specs/2025-01/auth-403-fix-9f3a7c.md
-- .claude/log/2025-01/auth-403-fix-9f3a7c.md
-
-PR links to GitHub Issue #42 if it exists
-PR description based on updated as-built spec
-```
-
-### Bad Example
-```
-❌ Writing detailed investigation in GitHub Issue
-❌ Creating specs in docs/ instead of .claude/specs/
-❌ Using slug with uppercase or spaces
-❌ Forgetting to update as-built before PR
-```
+- Follow naming rules: `[a-z0-9-]` for slug, `[0-9a-f]{6,8}` for id
 
 ---
 
@@ -185,19 +91,31 @@ PR description based on updated as-built spec
 
 | Action | Location | When |
 |--------|----------|------|
-| Start task | Create in `.claude/issues/` & `.claude/specs/` | Task start (Gate A) |
-| Log work | Append to `.claude/log/` | During implementation |
-| Update spec | Update `.claude/specs/` as-built | Before PR (Gate B) |
-| Team info | GitHub PR description | PR creation |
-| Coordination | GitHub Issues (minimal) | Team priorities only |
+| Start task | `.claude/issues/` + `.claude/specs/` | Gate A |
+| Log work | `.claude/log/` | During work |
+| Update spec | `.claude/specs/` (As-Built) | Gate B (before PR) |
+| Share results | GitHub PR | PR creation |
 
 ---
 
-## Template Usage
+## Examples
 
-Templates are available in `.claude/templates/` for:
-- Issue creation
-- Spec creation
-- Log entries
+**Good**:
+```
+Task: Fix auth 403 error
+Files:
+  - .claude/issues/2025-01/auth-403-fix-9f3a7c.md
+  - .claude/specs/2025-01/auth-403-fix-9f3a7c.md
+  - .claude/log/2025-01/auth-403-fix-9f3a7c.md
+PR: Based on updated As-Built spec
+```
 
-Use these templates to maintain consistency across tasks.
+**Bad**:
+```
+❌ Specs in docs/ instead of .claude/specs/
+❌ Uppercase or spaces in slug
+❌ Creating PR without updating As-Built
+❌ Detailed investigation in GitHub Issue
+```
+
+For more examples: @./docs/examples.md
