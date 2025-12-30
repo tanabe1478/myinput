@@ -5,7 +5,7 @@
 **Updated**: 2025-12-30
 
 ## Status
-`draft`
+`implemented`
 
 ## Goal
 Build a web-based RSS reader that solves the "unread pile-up" problem through automatic daily curation (Today queue) and priority-based consumption, optimizing for speed and simplicity over feature richness.
@@ -490,13 +490,64 @@ function matchesTheme(article: Article, theme: Theme): boolean {
 - White-label / multi-tenant
 
 ## As-Built Spec (Current Truth)
-_← Update this section before PR creation_
 
-(To be filled after implementation)
+### Overview
+RSS Reader MVP の包括的な仕様書を作成しました。ユーザーへの質問（AskUserQuestion）を通じて要件を収集し、技術スタック・機能範囲・データモデル・UI/UX要件を明確化した完全な設計ドキュメントです。
+
+### Key Components
+作成したドキュメント：
+- **仕様書本体**: `.claude/specs/2025-12/rss-reader-spec-a3f7e9.md` (約587行)
+- **Issue定義**: `.claude/issues/2025-12/rss-reader-spec-a3f7e9.md`
+- **作業ログ**: `.claude/log/2025-12/rss-reader-spec-a3f7e9.md`
+
+### Implementation Details
+
+#### 収集した要件（AskUserQuestion による質問）
+**第1ラウンド（4質問）**:
+1. 技術スタック → Web版（デスクトップネイティブではなく、PWA対応視野）
+2. Today生成タイミング → 日次定時生成（朝6時）
+3. キーワードマッチング → 部分一致（大文字小文字区別なし）
+4. Backlog画面 → 含める（閲覧のみ）
+
+**第2ラウンド（4質問）**:
+1. アーキテクチャ → SPA + バックエンドAPI
+2. RSS取得頻度 → 1時間おき
+3. データストレージ → NoSQL/PostgreSQL（安価・無料希望） → Cloudflare D1採用
+4. 新しさ加点 → 24時間以内を強めに加点
+
+**第3ラウンド（4質問）**:
+1. 認証 → 必要（マルチユーザー対応）
+2. UIライブラリ → shadcn/ui + Tailwind CSS
+3. ホスティング → Cloudflare Workers/Pages
+4. キーボードショートカット → 実装しない（MVP）
+
+**追加調査**:
+- ローカル開発環境 → Wrangler CLI で本番環境と同一スタック使用
+
+#### 仕様書の構成
+1. **技術スタック**: React + Cloudflare Workers + D1 + shadcn/ui
+2. **データモデル**: 8テーブル（users, feeds, items, item_states, themes, theme_keywords, today_snapshots, today_snapshot_items）
+3. **コア機能**:
+   - Today キュー自動生成（毎朝6時、最大80件）
+   - 優先度バケット（High/Med/Low/Other）
+   - テーマベースの自動優先度付け
+   - 記事消化（Open/Keep/Skip）
+   - 5画面（Today/Themes/Saved/Backlog/Feeds）
+4. **API設計**: 17エンドポイント定義
+5. **ローカル開発環境**: Wrangler CLI による本番パリティ確保
+6. **成功指標**: DAU、Today完了率、パフォーマンスメトリクス
+7. **MVP除外項目**: 明示的にスコープ外を定義
+
+#### 文書の特徴
+- **網羅性**: 技術・機能・UX・テスト・デプロイ全領域をカバー
+- **具体性**: 抽象論ではなく、実装可能なレベルの詳細度
+- **決定の記録**: Design Notes で各選択の理由・トレードオフを明記
+- **日英併記**: 質問は日本語、仕様書本体は英語（国際標準）
 
 ## Differences
 **Planned vs As-Built**:
-(To be filled after implementation)
+
+なし。仕様書作成という性質上、Planned Spec と As-Built Spec の乖離は発生しませんでした。ユーザーからの追加質問（ローカル開発環境）に対応してセクションを追加しましたが、これは計画の変更ではなく自然な拡張です。
 
 ## Design Notes
 
