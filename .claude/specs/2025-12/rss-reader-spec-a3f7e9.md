@@ -59,6 +59,56 @@ A web application built with React SPA frontend and backend API, hosted on Cloud
 - **CI/CD**: GitHub Actions
 - **Monitoring**: Cloudflare Analytics + Workers Analytics
 
+#### Local Development Environment
+
+**Tools**:
+- **Wrangler CLI**: Official Cloudflare developer tool for local Workers/D1 emulation
+- **Vite**: Frontend dev server with HMR (Hot Module Replacement)
+- **Node.js**: v18+ (LTS) for running Wrangler and build tools
+
+**Local Stack**:
+```
+Frontend Dev: Vite (localhost:5173)
+    ↓ Proxy /api/*
+Backend Dev: Wrangler dev (localhost:8787)
+    ↓ SQL Queries
+D1 Local: SQLite (.wrangler/state/v3/d1/)
+```
+
+**Key Commands**:
+```bash
+# Frontend development
+npm run dev              # Start Vite dev server
+
+# Backend development
+wrangler dev            # Start Workers locally with D1
+
+# Database operations
+wrangler d1 execute DB --local --command "SELECT * FROM users"
+wrangler d1 migrations apply DB --local
+
+# Full-stack (run both)
+npm run dev:full        # Concurrently run Vite + Wrangler
+```
+
+**Development Features**:
+- Hot reload for both frontend (Vite HMR) and backend (Wrangler auto-restart)
+- Local D1 uses actual SQLite files (same as production)
+- Migrations work identically in local and production
+- Can seed database with test data for development
+- Authentication uses dev/test API keys (Clerk) or local session (Auth.js)
+
+**Production Parity**:
+- Same API surface: D1, KV, Durable Objects (if needed)
+- Same runtime: V8 isolates (not Node.js)
+- Same limits: Can test Workers limits locally
+- No Docker needed: Lightweight, fast startup
+
+**Trade-offs**:
+- Wrangler dev slightly slower than plain Node.js (acceptable)
+- Some Workers APIs may have minor differences in local mode (rare)
+- Cron triggers can be tested manually or with `wrangler dev --test-scheduled`
+
 ### Key Components
 
 #### Frontend Components
@@ -499,6 +549,13 @@ _← Update this section before PR creation_
 - Aligns with "avoid pile-up" goal (consume recent first)
 - +10 points is significant but not overwhelming
 - Trade-off: Older "evergreen" content may never surface in Today
+
+**Wrangler for Local Development**:
+- True production parity: same runtime (V8), same database (SQLite)
+- No Docker needed, lightweight setup
+- Hot reload for fast iteration
+- Free local development, no cloud costs
+- Trade-off: Wrangler dev slightly slower than plain Node.js (acceptable for MVP)
 
 ## Testing Strategy
 

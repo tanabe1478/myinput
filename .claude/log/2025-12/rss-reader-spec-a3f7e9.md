@@ -32,9 +32,68 @@ Used AskUserQuestion tool to gather detailed requirements from user across multi
 4. **No Shortcuts**: Reduces MVP scope, mobile-friendly by default
 
 ### Next Steps
-- [ ] Write comprehensive spec document
-- [ ] Define data schema for D1
-- [ ] Document API endpoints
-- [ ] Specify UI components and layouts
+- [x] Write comprehensive spec document
+- [x] Define data schema for D1
+- [x] Document API endpoints
+- [x] Specify UI components and layouts
+
+---
+
+## 2025-12-30 - Local Development Environment
+
+### Question from User
+"ローカルで動かす時の技術スタックは？"
+
+### Investigation: Cloudflare Local Development Tools
+
+**Wrangler CLI**: Official Cloudflare developer tool
+- Local Workers emulation with Miniflare v3
+- D1 local database (actual SQLite file)
+- Hot reload support
+- Same API surface as production
+
+**Key Tools**:
+- `wrangler dev` - Run Workers locally with live reload
+- `wrangler d1 execute` - Run SQL against local D1
+- `wrangler d1 migrations` - Apply schema migrations
+- `wrangler pages dev` - Run Pages locally (SSG/SSR)
+
+**Frontend**:
+- Vite dev server (standard React development)
+- Proxy API calls to Wrangler dev server
+- Fast HMR, TypeScript type checking
+
+**Database**:
+- D1 local: `.wrangler/state/v3/d1/` (SQLite files)
+- Same schema as production
+- Migrations work identically
+- Can seed with test data
+
+**Authentication**:
+- Clerk: Use test/dev API keys
+- Auth.js: Local session handling
+- Can stub auth in early development
+
+### Findings
+- **No separate stack needed**: Wrangler provides full local environment
+- **True parity**: Local D1 = production D1 (both SQLite)
+- **Fast DX**: Wrangler dev has hot reload, instant feedback
+- **Free**: All local dev tools are free, no cloud costs during development
+
+### Architecture Decision
+Use Wrangler for full-stack local development:
+```
+Frontend: Vite (localhost:5173)
+    ↓ Proxy
+Backend: Wrangler dev (localhost:8787)
+    ↓
+D1 Local: SQLite (.wrangler/state/)
+```
+
+### Trade-offs
+- **Pro**: Perfect production parity, single toolchain
+- **Pro**: No Docker needed, lightweight
+- **Con**: Wrangler dev can be slower than plain Node.js (acceptable for MVP)
+- **Con**: Some Workers limitations in local mode (rare edge cases)
 
 ---
