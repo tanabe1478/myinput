@@ -21,7 +21,7 @@
 - [x] Initialize root project
 - [x] Setup frontend (Vite + React + GraphQL client)
 - [x] Setup backend (Wrangler + Hono + graphql-yoga)
-- [ ] Setup E2E tests (Playwright)
+- [x] Setup E2E tests (Playwright)
 - [ ] Write verification tests
 - [ ] Implement to pass tests
 - [ ] Update README with setup instructions
@@ -126,5 +126,35 @@
 ### Issues Encountered
 - Peer dependency warnings for vitest version (wants 2.0.x-2.1.x, have 4.0.15)
 - Can address later if it causes issues in testing
+
+---
+
+## 2025-12-30 - E2E Tests Setup
+
+### What I Did
+- Created e2e directory structure
+- Created `e2e/package.json` with Playwright scripts
+- Created `e2e/playwright.config.ts` with configuration
+- Created `e2e/tsconfig.json` extending root config
+- Installed Playwright and Chromium browser
+- Created health check test suite: `tests/health.spec.ts`
+
+### Decisions Made
+1. **Chromium only**: Start with one browser, add others if needed
+2. **Auto-start servers**: webServer config starts frontend and backend automatically
+3. **Base URL**: Frontend at localhost:5173, backend at localhost:8787
+4. **Test structure**: One test file per feature area
+
+### Files Created
+- `e2e/package.json` - Scripts for test, test:ui, test:debug, test:headed
+- `e2e/playwright.config.ts` - Playwright configuration with webServer setup
+- `e2e/tsconfig.json` - TypeScript config for tests
+- `e2e/tests/health.spec.ts` - Health check tests (3 tests)
+
+### Test Coverage
+Health check test includes:
+1. **Frontend accessibility**: Page loads, title and heading visible
+2. **Backend GraphQL**: Health query returns "ok"
+3. **Backend REST**: Health endpoint returns status and timestamp
 
 ---
