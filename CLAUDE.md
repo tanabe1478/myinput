@@ -94,6 +94,61 @@ You MUST:
 - Follow naming rules: `[a-z0-9-]` for slug, `[0-9a-f]{6,8}` for id
 - Create PR for EVERY task, even small ones
 
+### Testing Philosophy
+
+**Test-Driven Development (TDD) is MANDATORY for all implementation tasks.**
+
+#### Core Principles
+1. **Write tests FIRST, then implementation**
+   - Unit tests before functions
+   - Integration tests before modules
+   - E2E tests before features
+2. **Every PR must include tests**
+   - New features → New tests
+   - Bug fixes → Regression tests
+   - Refactoring → Existing tests must pass
+3. **Tests are executable documentation**
+   - Tests describe expected behavior
+   - Tests serve as usage examples
+   - Tests prevent regressions
+
+#### Test Pyramid
+```
+       E2E Tests (Few)
+    ─────────────────
+   Integration Tests (Some)
+  ─────────────────────────
+ Unit Tests (Many)
+───────────────────────────
+```
+
+**Distribution**:
+- **70% Unit Tests**: Functions, utilities, business logic
+- **20% Integration Tests**: API endpoints, database operations, service interactions
+- **10% E2E Tests**: Critical user flows (login, Today consumption, feed management)
+
+#### Test Infrastructure
+- **Unit/Integration**: Vitest (fast, Vite-native)
+- **E2E**: Playwright (cross-browser, reliable)
+- **GraphQL**: Mock Service Worker (MSW) for API mocking
+- **Database**: In-memory D1 for tests (via Wrangler)
+
+#### Test Requirements
+Before committing:
+- ✅ All tests pass (`npm test`)
+- ✅ Coverage > 80% for new code
+- ✅ E2E tests for critical paths pass
+- ✅ No skipped tests without documented reason
+
+#### CI/CD Integration
+Every PR triggers:
+1. Unit + Integration tests
+2. E2E tests (on staging environment)
+3. Coverage report
+4. Build verification
+
+**RED → GREEN → REFACTOR cycle is expected for all development.**
+
 ---
 
 ## Quick Reference
