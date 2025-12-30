@@ -158,3 +158,46 @@ Health check test includes:
 3. **Backend REST**: Health endpoint returns status and timestamp
 
 ---
+
+## 2025-12-30 - Verification Tests (TDD)
+
+### What I Did
+- Created backend unit tests for health checks (REST + GraphQL)
+- Created backend schema tests for GraphQL structure
+- Created frontend component tests for App component
+- Fixed vitest configuration issues (Workers pool incompatibility)
+- Fixed GraphQL schema validation (empty Mutation type)
+- Added placeholder `noop` mutation to satisfy GraphQL requirements
+- Fixed graphql package version conflicts with pnpm overrides
+- All tests now passing
+
+### Test Results
+**Frontend** (4/4 passing):
+- ✓ App component renders title
+- ✓ App component renders welcome message
+- ✓ App component mentions tech stack
+- ✓ App component applies Tailwind classes
+
+**Backend** (6/6 passing):
+- ✓ REST health endpoint returns ok status
+- ✓ GraphQL health query returns ok
+- ✓ GraphQL handles errors gracefully
+- ✓ Schema has valid Query and Mutation types
+- ✓ Schema has health query field
+- ✓ Schema has noop mutation field
+
+### Issues Encountered
+1. **Vitest Workers Pool**: vitest 4.0.15 incompatible with @cloudflare/vitest-pool-workers 0.5.41
+   - Fixed: Switched to standard node environment for tests
+2. **Empty Mutation Type**: GraphQL requires at least one mutation field
+   - Fixed: Added `noop` placeholder mutation
+3. **Multiple graphql Instances**: pnpm was not deduplicating graphql package
+   - Fixed: Added `pnpm.overrides` in root package.json
+
+### Files Created
+- `backend/src/__tests__/health.test.ts` - Health endpoint tests
+- `backend/src/schema/__tests__/builder.test.ts` - Schema structure tests
+- `backend/src/schema/mutations/noop.ts` - Placeholder mutation
+- `frontend/src/__tests__/App.test.tsx` - App component tests
+
+---
