@@ -1,0 +1,17 @@
+name = "rss-reader-backend"
+main = "src/index.ts"
+compatibility_date = "2025-12-30"
+
+[dev]
+port = 8787
+
+[[d1_databases]]
+binding = "DB"
+database_name = "rss-reader-db"
+database_id = "local-db-id"
+
+[env.production]
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "rss-reader-db"
+database_id = "" # Will be filled after creating production database
